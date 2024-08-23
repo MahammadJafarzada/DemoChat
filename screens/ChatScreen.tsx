@@ -1,18 +1,32 @@
-import { View, Text, TouchableOpacity, Image, StyleSheet, TextInput } from 'react-native'
-import React, { useState } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { Feather, FontAwesome } from "@expo/vector-icons"
+import { View, Text, TouchableOpacity, Image, StyleSheet, TextInput, Keyboard } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { Feather, FontAwesome } from "@expo/vector-icons";
+import EmojiSelector, { Categories } from 'react-native-emoji-selector';
 import { Bubble, GiftedChat } from 'react-native-gifted-chat';
 
 const ChatScreen = () => {
   const navigation = useNavigation();
   const [messages, setMessages] = useState([]);
+  const [showPicker, setShowPicker] = useState(false);
   const [inputMessages, setInputMessages] = useState("");
+  const inputRef = useRef(null);
 
   const handleInputText = (text) => {
     setInputMessages(text);
-  }
+  };
+
+  const handleEmojiSelect = (emoji) => {
+    setInputMessages(prev => prev + emoji);
+    setShowPicker(false);
+    inputRef.current.focus(); 
+  };
+
+  const handleShowPicker = () => {
+    Keyboard.dismiss(); 
+    setShowPicker(true);
+  };
 
   const renderMessage = (props) => {
     const { currentMessage } = props;
@@ -39,21 +53,23 @@ const ChatScreen = () => {
             }}
           />
         </View>
-      )
+      );
     }
     return <Bubble {...props} />;
-  }
+  };
 
   const submitHandler = () => {
-    const message = {
-      _id: Math.random().toString(36).substr(2, 7),
-      text: inputMessages,
-      createdAt: new Date().getTime(),
-      user: { _id: 1 }
+    if (inputMessages.trim()) {
+      const message = {
+        _id: Math.random().toString(36).substr(2, 7),
+        text: inputMessages,
+        createdAt: new Date().getTime(),
+        user: { _id: 1 }
+      };
+      setMessages((previousMessages) => GiftedChat.append(previousMessages, [message]));
+      setInputMessages("");
     }
-    setMessages((previousMessage) => GiftedChat.append(previousMessage, [message]));
-    setInputMessages("");
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -101,7 +117,7 @@ const ChatScreen = () => {
       </View>
       <GiftedChat
         messages={messages}
-        renderInputToolbar={() => { return null }}
+        renderInputToolbar={() => null}
         user={{ _id: 1 }}
         minInputToolbarHeight={0}
         renderMessage={renderMessage}
@@ -109,6 +125,7 @@ const ChatScreen = () => {
       <View style={styles.inputContainer}>
         <View style={styles.inputMessageContainer}>
           <TextInput
+            ref={inputRef} 
             style={styles.input}
             placeholder='Type here...'
             placeholderTextColor={"#000"}
@@ -123,7 +140,10 @@ const ChatScreen = () => {
                 style={styles.inputIconImage}
               />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.inputIcon}>
+            <TouchableOpacity
+              style={styles.inputIcon}
+              onPress={handleShowPicker} 
+            >
               <Image
                 source={require("../assets/smile.png")}
                 resizeMode='contain'
@@ -139,9 +159,21 @@ const ChatScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
+      {showPicker && (
+        <EmojiSelector
+          key="emoji-picker" 
+          onEmojiSelected={handleEmojiSelect}
+          category={Categories.all}
+          showTabs={true}
+          showSearchBar={true}
+          showHistory={true}
+          columns={10}
+          placeholder="Search emoji..."
+        />
+      )}
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -245,6 +277,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     marginHorizontal: 6
   }
-})
+});
 
 export default ChatScreen;

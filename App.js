@@ -1,8 +1,10 @@
 import React from 'react';
+import { LogBox } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import ChatScreen from './screens/ChatScreen';
 import ChatListing from './screens/ChatListing';
+
 
 const Stack = createStackNavigator();
 
